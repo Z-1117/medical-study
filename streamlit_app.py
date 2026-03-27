@@ -78,58 +78,55 @@ def fmt(sec):
     return f"{h:02d}:{m:02d}:{s:02d}"
 
 # ==========================
-# 生成一周时间段（6:30-22:30，每30分钟）
+# 生成时间段 6:30 - 22:30 每30分钟
 # ==========================
-def generate_time_slots():
+def get_time_slots():
     slots = []
-    start = datetime.datetime(2025, 1, 1, 6, 30)
+    current = datetime.datetime(2000, 1, 1, 6, 30)
     for i in range(33):
-        end = start + datetime.timedelta(minutes=30)
-        slot = f"{start.strftime('%H:%M')} - {end.strftime('%H:%M')}"
-        slots.append(slot)
-        start = end
+        end = current + datetime.timedelta(minutes=30)
+        slots.append(f"{current.strftime('%H:%M')} - {end.strftime('%H:%M')}")
+        current = end
     return slots
 
-time_slots = generate_time_slots()
+slots = get_time_slots()
 
 # ==========================
-# 横向一周时间表
+# 每周日程（你要的样式：每段后面都能填内容）
 # ==========================
-def weekly_timeline():
-    st.subheader("📅 一周横向时间轴（6:30-22:30）")
+def weekly_schedule():
+    st.subheader("📅 每周学习日程（每时间段可填内容）")
     days = ["第1天", "第2天", "第3天", "第4天", "第5天", "第6天", "第7天"]
     
-    for idx, day in enumerate(days):
-        st.markdown(f"### {day}")
-        col1, col2, col3 = st.columns([1, 3, 1])
+    for day_idx, day_name in enumerate(days):
+        st.markdown(f"---")
+        st.markdown(f"## 📌 {day_name}")
         
-        with col1:
-            for t in time_slots:
-                st.write(t)
+        day_data = []
+        for i, slot in enumerate(slots):
+            content = st.text_input(f"📝 {slot}", key=f"c{day_idx}_{i}")
+            duration = st.number_input(f"⏱ 时长(分钟) {slot}", min_value=0, key=f"d{day_idx}_{i}")
+            day_data.append({"时间段": slot, "内容": content, "时长": duration})
         
-        with col2:
-            content = st.text_area(f"内容｜{day}", height=500, key=f"c{idx}")
+        total = sum([d["时长"] for d in day_data])
+        st.metric(f"✅ {day_name} 总学习时长", f"{total} 分钟")
         
-        with col3:
-            duration = st.number_input(f"时长(分钟)｜{day}", value=0, key=f"d{idx}")
-            st.metric("当日累计", duration)
-            st.text_area("反思", key=f"r{idx}", height=120)
-            st.text_area("总结", key=f"s{idx}", height=120)
+        st.text_area(f"💡 {day_name} 反思总结", key=f"sum_{day_idx}", height=100)
 
-    if st.button("💾 保存时间轴"):
-        st.success("✅ 时间轴已保存")
+    if st.button("💾 保存整周日程"):
+        st.success("✅ 保存成功！")
 
 # ==========================
 # 主界面
 # ==========================
 st.title("🩺 Z — 医学备考系统")
-menu = st.selectbox("菜单", ["⏱️ 时间记录", "📅 一周时间轴", "📚 复习计划", "📜 历史记录", "💾 数据导出"])
+menu = st.selectbox("菜单", ["⏱️ 时间记录", "📅 每周日程", "📚 复习计划", "📜 历史记录", "💾 数据导出"])
 
 MAIN = ["医学备考","英语","科研","休息","运动","饮食","通勤","娱乐","其他"]
 TYPES = ["深度学习","浅度学习","休息","无效","自定义"]
 
 # ==========================
-# 1. 时间记录（秒表实时跳）
+# 1. 时间记录
 # ==========================
 if menu == "⏱️ 时间记录":
     st.subheader("⏱️ 学习计时（实时秒表）")
@@ -144,7 +141,6 @@ if menu == "⏱️ 时间记录":
         if tp == "自定义":
             tp = st.text_input("输入类型")
 
-    # 按钮
     c1, c2, c3 = st.columns(3)
     with c1:
         if st.button("▶️ 开始"):
@@ -182,17 +178,14 @@ if menu == "⏱️ 时间记录":
                 st.session_state.sw_start = None
                 st.success("✅ 保存成功")
 
-    # 实时显示秒表
     placeholder = st.empty()
     with placeholder:
         st.metric("当前计时", fmt(st.session_state.sw_elapsed))
 
-    # 自动刷新
     if st.session_state.sw_running:
         time.sleep(0.1)
         st.rerun()
 
-    # 今日记录
     st.subheader("📝 今日记录")
     today = str(datetime.date.today())
     td = df[df["日期"] == today].copy()
@@ -207,10 +200,10 @@ if menu == "⏱️ 时间记录":
             st.rerun()
 
 # ==========================
-# 2. 一周时间轴
+# 2. 每周日程（你要的样式）
 # ==========================
-elif menu == "📅 一周时间轴":
-    weekly_timeline()
+elif menu == "📅 每周日程":
+    weekly_schedule()
 
 # ==========================
 # 3. 复习计划
