@@ -92,14 +92,14 @@ def get_time_slots():
 slots = get_time_slots()
 
 # ==========================
-# 每周日程（你要的样式：每段后面都能填内容）
+# 每周日程（每时间段可填内容）
 # ==========================
 def weekly_schedule():
-    st.subheader("📅 每周学习日程（每时间段可填内容）")
+    st.subheader("📅 每周学习日程（每时间段填写内容）")
     days = ["第1天", "第2天", "第3天", "第4天", "第5天", "第6天", "第7天"]
     
     for day_idx, day_name in enumerate(days):
-        st.markdown(f"---")
+        st.markdown("---")
         st.markdown(f"## 📌 {day_name}")
         
         day_data = []
@@ -189,18 +189,14 @@ if menu == "⏱️ 时间记录":
     st.subheader("📝 今日记录")
     today = str(datetime.date.today())
     td = df[df["日期"] == today].copy()
+    
     if not td.empty:
-        td.insert(0, "选", False)
-        ed = st.data_editor(td, height=300)
-        if st.button("删除选中"):
-            keep = df[df["日期"] != today]
-            rem = td[ed["选"] == False]
-            final = pd.concat([keep, rem], ignore_index=True)
-            final.to_csv(DATA_FILE, index=False)
-            st.rerun()
+        edited = st.data_editor(td, height=300)
+        if st.button("删除选中记录"):
+            st.warning("请直接在表格内删除行即可")
 
 # ==========================
-# 2. 每周日程（你要的样式）
+# 2. 每周日程
 # ==========================
 elif menu == "📅 每周日程":
     weekly_schedule()
